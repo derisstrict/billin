@@ -1,4 +1,5 @@
-import 'package:billin/common/colors.dart';
+import 'package:billin/common/c_app_bar.dart';
+import 'package:billin/common/c_colors.dart';
 import 'package:billin/common/section_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -9,17 +10,7 @@ class SplitPage extends StatelessWidget {
     // TODO: implement build
     return Scaffold(
       backgroundColor: CColors.background,
-      appBar: AppBar(
-        backgroundColor: CColors.accent,
-        title: Text("Split Bill",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight(600)
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: CAppBar("Split Bill"),
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsetsGeometry.all(20),
