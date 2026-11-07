@@ -9,4 +9,10 @@ class CColors {
   static Color danger = Color(0xFFFF6467);
   static Color textShared = Color(0xFF00A63E);
   static Color textEach = Color(0xFF7F22FE);
+
+  // Status colors for undangan dialogs
+  static Color success = Color(0xFF5EA500);
+  static Color successLight = Color(0xFFDDECC9);
+  static Color dangerRed = Color(0xFFFB2C36);
+  static Color dangerRedLight = Color(0xFFFEE5E7);
 }
