@@ -28,7 +28,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    // TODO: panggil API register di sini, lalu arahkan ke halaman login.
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Form register valid')),
     );

@@ -26,7 +26,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    // TODO: panggil API login di sini, lalu pindah ke halaman utama.
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Form login valid')),
     );

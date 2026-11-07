@@ -10,8 +10,6 @@ class AppColors {
   static const caption = Color(0xFF9E9E9E);
 }
 
-/// Kerangka halaman login/register: background gradient, judul,
-/// dan kartu putih dengan logo di tengah atasnya.
 class AuthLayout extends StatelessWidget {
   const AuthLayout({
     super.key,
@@ -52,8 +50,7 @@ class AuthLayout extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      // Jarak atas tetap (proporsi layar) supaya judul, logo,
-                      // dan kartu berada di posisi yang sama di login dan register.
+
                       SizedBox(height: constraints.maxHeight * 0.12),
                       Text(
                         title,
@@ -108,7 +105,6 @@ class AuthLayout extends StatelessWidget {
   }
 }
 
-/// Lingkaran putih berisi logo dari assets/images/logo.png.
 class _Logo extends StatelessWidget {
   const _Logo({required this.size});
 
@@ -135,7 +131,6 @@ class _Logo extends StatelessWidget {
   }
 }
 
-/// Label di atas + kolom input dengan border abu-abu membulat.
 class AuthField extends StatelessWidget {
   const AuthField({
     super.key,
@@ -205,7 +200,6 @@ class AuthField extends StatelessWidget {
   }
 }
 
-/// Tombol dengan gradient hijau mint ke biru, kiri ke kanan.
 class GradientButton extends StatelessWidget {
   const GradientButton({
     super.key,
@@ -248,7 +242,6 @@ class GradientButton extends StatelessWidget {
   }
 }
 
-/// Teks kecil di bawah tombol, contoh: "Tidak punya akun? Buat Akun".
 class AuthFooter extends StatelessWidget {
   const AuthFooter({
     super.key,
