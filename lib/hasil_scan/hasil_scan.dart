@@ -4,6 +4,7 @@ import 'package:billin/common/c_container.dart';
 import 'package:billin/common/currency_formatter.dart';
 import 'package:billin/hasil_scan/item_card.dart';
 import 'package:billin/model/receipt.dart';
+import 'package:billin/model/receipt_validation.dart';
 import 'package:billin/service/receipt_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -202,10 +203,53 @@ class _HasilScanState extends State<HasilScan> {
     );
   }
 
+  Widget _mismatchWarning(ReceiptData receipt, ReceiptValidation validation) {
+    final isGrandTotalMismatch = validation.hasGrandTotalMismatch;
+    final expected = isGrandTotalMismatch
+        ? validation.expectedGrandTotal
+        : validation.itemsSubtotal;
+    final actual = isGrandTotalMismatch
+        ? receipt.grandTotal
+        : receipt.subtotal.round();
+    final message = isGrandTotalMismatch
+        ? 'Total item + pajak/layanan - diskon '
+              '(${formatRupiah(expected)}) tidak cocok dengan grand total '
+              'struk (${formatRupiah(actual)}). '
+              'Selisih ${formatRupiah(validation.primaryDifference.abs())}. '
+              'Periksa harga item, diskon, pajak, atau biaya layanan.'
+        : 'Total item (${formatRupiah(expected)}) tidak cocok dengan subtotal '
+              'struk (${formatRupiah(actual)}). '
+              'Selisih ${formatRupiah(validation.primaryDifference.abs())}. '
+              'Periksa harga atau diskon item.';
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: CColors.danger.withAlpha(20),
+        border: BoxBorder.all(
+          color: CColors.danger.withAlpha(50),
+          width: 0.5
+        )
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, color: CColors.danger),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(message, style: TextStyle(color: CColors.danger)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final receipt = _receipt;
     final itemCount = receipt.items.length;
+    final validation = ReceiptValidation.fromReceipt(receipt);
 
     return Scaffold(
       backgroundColor: CColors.background,
@@ -491,29 +535,10 @@ class _HasilScanState extends State<HasilScan> {
                   ),
                 ],
               ),
-              SizedBox(height: 10,),
-              Container(
-                padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: CColors.danger.withAlpha(20)
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline_rounded,
-                      color: CColors.danger,
-                    ),
-                    SizedBox(width: 10,),
-                    Expanded(
-                      child: Text("Terdeteksi perbedaan hasil perhitungan total akhir dengan harga item. Pastikan untuk melakukan pengecekan harga setiap item.",
-                        style: TextStyle(
-                          color: CColors.danger
-                        ),
-                      )
-                    )
-                  ],
-                ),
-              ),
+              if (validation.hasMismatch) ...[
+                const SizedBox(height: 10),
+                _mismatchWarning(receipt, validation),
+              ],
               const SizedBox(height: 15),
               Container(
                 padding: const EdgeInsets.all(10),

@@ -5,7 +5,6 @@ class ReceiptItem {
   final String name;
   final num qty;
   final int price;
-  final int itemDiscount;
   final int total;
 
   const ReceiptItem({
@@ -13,25 +12,20 @@ class ReceiptItem {
     required this.name,
     required this.qty,
     required this.price,
-    required this.itemDiscount,
     required this.total,
   });
 
   factory ReceiptItem.fromJson(Map<String, dynamic> json) {
     final qty = _asNum(json['qty'], fallback: 1);
     final price = _asInt(json['price']);
-    final itemDiscount = _asInt(json['item_discount']);
     final rawTotal = json['total'];
-    final total = rawTotal == null
-        ? (qty * price - itemDiscount).round()
-        : _asInt(rawTotal);
+    final total = rawTotal == null ? (qty * price).round() : _asInt(rawTotal);
 
     return ReceiptItem(
       id: _asInt(json['id']),
       name: _asString(json['name']),
       qty: qty,
       price: price,
-      itemDiscount: itemDiscount,
       total: total,
     );
   }
@@ -110,7 +104,6 @@ class ReceiptData {
         name: 'Salt Bread',
         qty: 12,
         price: 14000,
-        itemDiscount: 0,
         total: 168000,
       ),
     );
