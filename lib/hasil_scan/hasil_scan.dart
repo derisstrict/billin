@@ -199,6 +199,15 @@ class _HasilScanState extends State<HasilScan> {
               ? accentStyle
               : const TextStyle(fontWeight: FontWeight(700)),
         ),
+        IconButton(
+          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+          constraints: BoxConstraints(),
+          onPressed: () {}, 
+          icon: Icon(Icons.edit_outlined,
+            size: 20,
+            color: CColors.textGray,
+          )
+        ),
       ],
     );
   }
