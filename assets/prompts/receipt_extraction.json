@@ -1,0 +1,109 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "Receipt Extraction Rules:\n1. PAYMENT VS CHARGES: Ignore TUNAI or CASH because that is the money paid by the customer, not subtotal, discounts, or grand_total. Ignore KEMBALI or KEMBALIAN because that is the change returned, not tax or grand_total. The number next to QTY is the total item count, not service_charge. If there's the word PCS after an item's name, it is part of the item's name not the quantity.\n2. TAX (tax): Set tax to 0 if the receipt does not explicitly show the word PAJAK %, PPN %, or PB1 %. Tax MIGHT have percentage next to it.\n3. SERVICE CHARGE (service_charge): Set service_charge to 0 if the receipt does not explicitly show SERVICE or LAYANAN.\n4. DISCOUNTS (discounts): Set discounts to 0 if the receipt does not explicitly show DISKON or POTONGAN.\n5. NUMBER FORMAT: Dots are thousand separators and commas are decimals. Convert formats like 26.000,00 into a plain integer 26000.\n6. TOTALS: If tax, service_charge, and discounts are 0, grand_total must equal subtotal. \n7. ITEM ID (id): Fill each of the id field with integer starting from 1 to each items.\n Some info that might be useful: Read the items from top to bottom."
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Extract the items and totals from this receipt."
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "{{receipt_image}}"
+          }
+        }
+      ]
+    }
+  ],
+  "temperature": 0,
+  "chat_template_kwargs": {
+    "enable_thinking": false
+  },
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "receipt_extraction",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "merchant_name": {
+            "type": "string",
+            "description": "Nama toko atau merchant di bagian paling atas struk."
+          },
+          "date": {
+            "type": "string",
+            "description": "Tanggal transaksi jika tertera."
+          },
+          "items": {
+            "type": "array",
+            "description": "Daftar barang belanjaan.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "The id of each items such as (1, 2, 3, 4, ...)"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "qty": {
+                  "type": "number",
+                  "description": "Jumlah/kuantitas barang yang dibeli (biasanya angka setelah huruf 'x')."
+                },
+                "price": {
+                  "type": "integer",
+                  "description": "Harga satuan per item (biasanya angka sebelum huruf 'x')."
+                },
+                "total": {
+                  "type": "integer",
+                  "description": "Total harga baris (angka setelah tanda sama dengan '=')."
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "qty",
+                "price",
+                "total"
+              ]
+            }
+          },
+          "subtotal": {
+            "type": "number",
+            "description": "Total harga barang sebelum pembayaran."
+          },
+          "tax": {
+            "type": "integer",
+            "description": "Pajak (PPN/PB1). WAJIB 0 jika tidak ada tulisan Pajak/PPN/PB1 pada struk."
+          },
+          "service_charge": {
+            "type": "integer",
+            "description": "Biaya layanan. WAJIB 0 jika tidak tertulis Service Charge di struk."
+          },
+          "discounts": {
+            "type": "integer",
+            "description": "Potongan harga. WAJIB 0 jika tidak ada baris diskon."
+          },
+          "grand_total": {
+            "type": "integer",
+            "description": "Total tagihan bersih yang wajib dibayar (bukan uang tunai yang diserahkan)."
+          }
+        },
+        "required": [
+          "merchant_name",
+          "items",
+          "date",
+          "subtotal",
+          "grand_total"
+        ]
+      }
+    }
+  }
+}
