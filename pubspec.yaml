@@ -90,11 +90,15 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-fonts:
+
+  assets:
+    - assets/images/
+
+  fonts:
     - family: Poppins
       fonts:
         - asset: fonts/Poppins-Light.ttf
-          weight: 200
+          weight: 300
         - asset: fonts/Poppins-Regular.ttf
           weight: 400
         - asset: fonts/Poppins-Medium.ttf
