@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:async';
 import 'package:billin/main_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -112,9 +113,9 @@ class _LandingPageState extends State<LandingPage>{
       children: List.generate(_slides.length,(i){
         final active = i == _current;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.symmetric(horizontal: 2),
-          width: 16,
+          width: active ? 28 : 16,
           height: 3,
           decoration: BoxDecoration(
             color: active ? const Color(0xff1e88e5) : const Color(0xffc4c4c4),
@@ -202,6 +203,14 @@ class _SlideView extends StatelessWidget {
                   );
                 }
               ),
+            )
+            .animate(onPlay: (c) => c.repeat(reverse: true))
+            .moveY(begin: -6, end: 6, duration: 2.seconds, curve: Curves.easeInOut)
+            .animate()
+            .fadeIn(duration: 500.ms)
+            .scale(
+              begin: const Offset(0.85, 0.85),
+              curve: Curves.easeOutBack,
             ),
           ),
         ),
@@ -231,7 +240,8 @@ class _SlideView extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),
-                ),
+                ).animate().fadeIn(duration: 500.ms, delay: 200.ms)
+                 .slideY(begin: 0.3, end: 0, curve: Curves.easeOut),
                 const SizedBox(height: 28),
                 Text(
                   data.description,
@@ -242,7 +252,8 @@ class _SlideView extends StatelessWidget {
                     height: 1.5,
                     color: Color(0xFFA8A8A8),
                   ),
-                ),
+                ).animate().fadeIn(duration: 500.ms, delay: 400.ms)
+                 .slideY(begin: 0.3, end: 0, curve: Curves.easeOut),
               ],
             ),
           ),
