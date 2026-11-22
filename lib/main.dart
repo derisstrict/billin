@@ -1,8 +1,10 @@
 import 'package:billin/scan/scan_page.dart';
 import 'package:billin/split_page.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+void main() async {
+  await initializeDateFormatting();
   runApp(const MyApp());
 }
 
