@@ -5,183 +5,19 @@ import 'package:billin/common/currency_formatter.dart';
 import 'package:billin/hasil_scan/item_card.dart';
 import 'package:billin/model/receipt.dart';
 import 'package:billin/model/receipt_validation.dart';
-import 'package:billin/service/receipt_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 class HasilScan extends StatefulWidget {
-  const HasilScan({super.key});
+  final ReceiptData receipt;
+
+  const HasilScan({super.key, required this.receipt});
 
   @override
   State<HasilScan> createState() => _HasilScanState();
 }
 
 class _HasilScanState extends State<HasilScan> {
-  static const _supportedMimeTypes = {'image/jpeg', 'image/png', 'image/webp'};
-  static const _maxImageBytes = 10 * 1024 * 1024;
-
-  final ReceiptService _receiptService = ReceiptService();
-  final ImagePicker _imagePicker = ImagePicker();
-
-  ReceiptData _receipt = ReceiptData.demo();
-  bool _isScanning = false;
-
-  Future<void> _onScanPressed() async {
-    if (_isScanning) {
-      return;
-    }
-
-    final source = await _pickSource();
-    if (source == null || !mounted) {
-      return;
-    }
-
-    XFile? file;
-    try {
-      file = await _imagePicker.pickImage(
-        source: source,
-        maxWidth: 1800,
-        imageQuality: 85,
-      );
-    } catch (error) {
-      if (mounted) {
-        _showError(
-          'Gagal membuka '
-          '${source == ImageSource.camera ? 'kamera' : 'galeri'}: $error',
-        );
-      }
-      return;
-    }
-
-    if (file == null || !mounted) {
-      return;
-    }
-
-    await _scanFile(file);
-  }
-
-  Future<ImageSource?> _pickSource() {
-    final supportsCamera =
-        kIsWeb ||
-        defaultTargetPlatform == TargetPlatform.android ||
-        defaultTargetPlatform == TargetPlatform.iOS;
-
-    if (!supportsCamera) {
-      return Future.value(ImageSource.gallery);
-    }
-
-    return showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            ListTile(
-              leading: Icon(Icons.camera_alt_outlined, color: CColors.accent),
-              title: const Text('Ambil dari Kamera'),
-              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.photo_library_outlined,
-                color: CColors.accent,
-              ),
-              title: const Text('Pilih dari Galeri'),
-              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _scanFile(XFile file) async {
-    final mimeType = _mimeTypeFor(file);
-    if (!_supportedMimeTypes.contains(mimeType)) {
-      _showError('Format gambar tidak didukung. Gunakan JPEG, PNG, atau WebP.');
-      return;
-    }
-
-    setState(() => _isScanning = true);
-
-    try {
-      final bytes = await file.readAsBytes();
-      if (bytes.lengthInBytes > _maxImageBytes) {
-        _showError(
-          'Ukuran gambar terlalu besar (maks. 10 MB). Pilih gambar lain.',
-        );
-        return;
-      }
-
-      final receipt = await _receiptService.extractFromImage(
-        bytes,
-        mimeType: mimeType,
-      );
-
-      if (!mounted) {
-        return;
-      }
-      setState(() => _receipt = receipt);
-      _showMessage('Struk berhasil dipindai.');
-    } on ReceiptException catch (error) {
-      if (mounted) {
-        _showError(error.message);
-      }
-    } catch (error) {
-      if (mounted) {
-        _showError('Gagal memindai struk: $error');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isScanning = false);
-      }
-    }
-  }
-
-  String _mimeTypeFor(XFile file) {
-    final mimeType = file.mimeType?.toLowerCase().trim();
-    if (mimeType == 'image/jpg') {
-      return 'image/jpeg';
-    }
-    if (mimeType != null && mimeType.isNotEmpty) {
-      return mimeType;
-    }
-
-    final path = file.path.toLowerCase();
-    if (path.endsWith('.png')) {
-      return 'image/png';
-    }
-    if (path.endsWith('.webp')) {
-      return 'image/webp';
-    }
-    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
-      return 'image/jpeg';
-    }
-
-    return 'image/jpeg';
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: CColors.danger,
-        duration: const Duration(seconds: 6),
-      ),
-    );
-  }
+  late final ReceiptData _receipt = widget.receipt;
 
   Widget _summaryRow(String label, String value, {bool accent = false}) {
     final accentStyle = TextStyle(
@@ -202,11 +38,8 @@ class _HasilScanState extends State<HasilScan> {
         IconButton(
           padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
           constraints: BoxConstraints(),
-          onPressed: () {}, 
-          icon: Icon(Icons.edit_outlined,
-            size: 20,
-            color: CColors.textGray,
-          )
+          onPressed: () {},
+          icon: Icon(Icons.edit_outlined, size: 20, color: CColors.textGray),
         ),
       ],
     );
@@ -236,10 +69,7 @@ class _HasilScanState extends State<HasilScan> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         color: CColors.danger.withAlpha(20),
-        border: BoxBorder.all(
-          color: CColors.danger.withAlpha(50),
-          width: 0.5
-        )
+        border: BoxBorder.all(color: CColors.danger.withAlpha(50), width: 0.5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,49 +230,6 @@ class _HasilScanState extends State<HasilScan> {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        GestureDetector(
-                          onTap: _isScanning ? null : _onScanPressed,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: CColors.accent.withAlpha(
-                                _isScanning ? 25 : 50,
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              spacing: 5,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_isScanning)
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: CColors.accent,
-                                    ),
-                                  )
-                                else
-                                  Icon(
-                                    Icons.document_scanner_outlined,
-                                    color: CColors.accent,
-                                    size: 18,
-                                  ),
-                                Text(
-                                  _isScanning
-                                      ? "Memindai struk..."
-                                      : "Temp Scan Item",
-                                  style: TextStyle(
-                                    color: CColors.accent,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
                         ),
                         const SizedBox(height: 15),
