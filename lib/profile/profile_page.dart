@@ -3,6 +3,7 @@ import 'package:billin/profile/about_apps.dart';
 import 'package:billin/profile/change_pass_page.dart';
 import 'package:billin/profile/edit_profile_page.dart';
 import 'package:flutter/material.dart';
+import 'package:billin/auth/auth_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -30,7 +31,7 @@ class ProfilePage extends StatelessWidget {
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => AuthService().signOut(context),
             child: const Text('Keluar', style: TextStyle(color: _red)),
           ),
         ],

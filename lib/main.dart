@@ -1,9 +1,27 @@
 import 'package:billin/page/landing_page.dart';
 import 'package:billin/split_page.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:billin/auth/login_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://ytkkkcduwoeksfckyxbi.supabase.co',
+    publishableKey: 'sb_publishable_kqD4gvu7gUftjBYNGYUyvw_rVx9_Ldc',
+  );
+
+  Supabase.instance.client.auth.onAuthStateChange.listen(
+    (data) {
+      print('AUTH EVENT: ${data.event}');
+      print('ACCESS TOKEN: ${data.session?.accessToken}');
+    },
+    onError: (error, stackTrace) {
+      print('AUTH ERROR: $error');
+    },
+  );
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -19,7 +37,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Poppins',
       ),
       debugShowCheckedModeBanner: false,
-      home: LandingPage(),
+      home: LoginScreen(),
     );
   }
 }
