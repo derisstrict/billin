@@ -11,18 +11,16 @@ class CAppBar extends StatelessWidget implements PreferredSizeWidget {
     // TODO: implement build
     return AppBar(
       backgroundColor: CColors.accent,
-      title: Text(title,
+      foregroundColor: Colors.white,
+      title: Text(
+        title,
         style: TextStyle(
           color: Colors.white,
           fontSize: 16,
-          fontWeight: FontWeight(600)
+          fontWeight: FontWeight(600),
         ),
       ),
-      shape: Border(
-        bottom: BorderSide(
-          color: CColors.border
-        )
-      ),
+      shape: Border(bottom: BorderSide(color: CColors.border)),
       centerTitle: true,
     );
   }
