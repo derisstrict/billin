@@ -7,6 +7,7 @@ import 'package:billin/profile/change_pass_page.dart';
 import 'package:billin/profile/edit_profile_page.dart';
 import 'package:billin/scan/scan_flow.dart';
 import 'package:flutter/material.dart';
+import 'package:billin/auth/auth_service.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool withNavbar;
@@ -43,7 +44,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => AuthService().signOut(context),
             child: const Text('Keluar', style: TextStyle(color: _red)),
           ),
         ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'auth_service.dart';
 import 'auth_widgets.dart';
 import 'page_transitions.dart';
 import 'register_screen.dart';
@@ -26,9 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Form login valid')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Form login valid')));
   }
 
   @override
@@ -71,7 +71,16 @@ class _LoginScreenState extends State<LoginScreen> {
               },
             ),
             const SizedBox(height: 18),
-            GradientButton(text: 'Login', onPressed: _submit),
+            GradientButton(
+              text: 'Login',
+              onPressed: () async {
+                await AuthService().login(
+                  _emailController.text,
+                  _passwordController.text,
+                  context,
+                );
+              },
+            ),
             const SizedBox(height: 10),
             AuthFooter(
               text: 'Tidak punya akun?',

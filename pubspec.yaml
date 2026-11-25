@@ -41,6 +41,7 @@ dependencies:
   remixicon: ^4.9.3
   google_fonts: ^9.0.0
   flutter_animate: ^4.5.2
+  supabase_flutter: ^2.18.3
 
 dev_dependencies:
   flutter_test:

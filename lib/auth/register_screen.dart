@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'auth_service.dart';
 import 'auth_widgets.dart';
 import 'login_screen.dart';
 import 'page_transitions.dart';
@@ -25,11 +26,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Form register valid')),
+    await AuthService().signUp(
+      _emailController.text.trim(),
+      _passwordController.text,
+      context,
     );
   }
 
