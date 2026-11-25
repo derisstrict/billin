@@ -5,6 +5,7 @@ import 'package:billin/common/currency_formatter.dart';
 import 'package:billin/hasil_scan/item_card.dart';
 import 'package:billin/model/receipt.dart';
 import 'package:billin/model/receipt_validation.dart';
+import 'package:billin/split_page.dart';
 import 'package:flutter/material.dart';
 
 class HasilScan extends StatefulWidget {
@@ -336,23 +337,33 @@ class _HasilScanState extends State<HasilScan> {
                 _mismatchWarning(receipt, validation),
               ],
               const SizedBox(height: 15),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: CColors.accent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Lanjutkan",
-                      style: TextStyle(
-                        fontWeight: FontWeight(700),
-                        color: Colors.white,
+              Material(
+                color: CColors.accent,
+                borderRadius: BorderRadius.circular(10),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => SplitPage(receipt: receipt),
                       ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Lanjutkan",
+                          style: TextStyle(
+                            fontWeight: FontWeight(700),
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ],
