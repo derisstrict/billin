@@ -38,6 +38,9 @@ dependencies:
   dio: ^5.11.1
   intl: ^0.20.3
   google_mlkit_document_scanner: ^0.7.2
+  remixicon: ^4.9.3
+  google_fonts: ^9.0.0
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
@@ -95,11 +98,15 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-fonts:
+
+  assets:
+    - assets/images/
+
+  fonts:
     - family: Poppins
       fonts:
         - asset: fonts/Poppins-Light.ttf
-          weight: 200
+          weight: 300
         - asset: fonts/Poppins-Regular.ttf
           weight: 400
         - asset: fonts/Poppins-Medium.ttf
