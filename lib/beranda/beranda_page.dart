@@ -3,7 +3,7 @@ import 'package:billin/common/c_container.dart';
 import 'package:billin/common/c_icon_box.dart';
 import 'package:billin/common/navbar.dart';
 import 'package:billin/profile/profile_page.dart';
-import 'package:billin/scan/scan_page.dart';
+import 'package:billin/scan/scan_flow.dart';
 import 'package:billin/undangan/undangan_benar.dart';
 import 'package:flutter/material.dart';
 
@@ -76,14 +76,7 @@ class _BerandaPageState extends State<BerandaPage> {
     super.dispose();
   }
 
-  void _openScanner() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ScanPage(),
-      ),
-    );
-  }
+  void _openScanner() => openReceiptScanner(context);
 
   @override
   Widget build(BuildContext context) {
@@ -165,11 +158,7 @@ class _BerandaHeader extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: const Center(
-            child: Icon(
-              Icons.person,
-              size: 28,
-              color: Color(0xFF9E9E9E),
-            ),
+            child: Icon(Icons.person, size: 28, color: Color(0xFF9E9E9E)),
           ),
         ),
       ],
@@ -221,9 +210,7 @@ class _DashboardGrid extends StatelessWidget {
                 mainValue: '34 kali',
               ),
             ),
-            Expanded(
-              child: _SubscriptionCard(),
-            ),
+            Expanded(child: _SubscriptionCard()),
           ],
         ),
       ],
@@ -706,8 +693,20 @@ class _AvatarMemberStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatars = <Widget>[
-      _buildCircle(child: const Icon(Icons.person, size: _size * 0.65, color: Color(0xFF9E9E9E))),
-      _buildCircle(child: const Icon(Icons.person, size: _size * 0.65, color: Color(0xFF9E9E9E))),
+      _buildCircle(
+        child: const Icon(
+          Icons.person,
+          size: _size * 0.65,
+          color: Color(0xFF9E9E9E),
+        ),
+      ),
+      _buildCircle(
+        child: const Icon(
+          Icons.person,
+          size: _size * 0.65,
+          color: Color(0xFF9E9E9E),
+        ),
+      ),
       _buildCircle(
         child: const Text(
           '2+',

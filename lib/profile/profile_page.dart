@@ -5,7 +5,7 @@ import 'package:billin/main_screen.dart';
 import 'package:billin/profile/about_apps.dart';
 import 'package:billin/profile/change_pass_page.dart';
 import 'package:billin/profile/edit_profile_page.dart';
-import 'package:billin/scan/scan_page.dart';
+import 'package:billin/scan/scan_flow.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -21,14 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
   static const _red = Color(0xFFEB3B4A);
   int _navIndex = 1;
 
-  void _openScanner() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ScanPage(),
-      ),
-    );
-  }
+  void _openScanner() => openReceiptScanner(context);
 
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(

@@ -1,15 +1,21 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:billin/common/c_colors.dart';
 import 'package:billin/hasil_scan/hasil_scan.dart';
 import 'package:billin/model/receipt.dart';
+import 'package:billin/scan/receipt_scanner.dart';
 import 'package:billin/service/receipt_service.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 
 class ScanPage extends StatefulWidget {
-  const ScanPage({super.key});
+  final Uint8List imageBytes;
+  final String mimeType;
+
+  const ScanPage({
+    super.key,
+    required this.imageBytes,
+    this.mimeType = 'image/jpeg',
+  });
 
   @override
   State<ScanPage> createState() => _ScanPageState();
@@ -18,74 +24,78 @@ class ScanPage extends StatefulWidget {
 class _ScanPageState extends State<ScanPage> {
   final ReceiptService _service = ReceiptService();
 
-  Uint8List? _capturedBytes;
-  String _mimeType = 'image/jpeg';
+  late Uint8List _capturedBytes = widget.imageBytes;
+  late String _mimeType = widget.mimeType;
   bool _isProcessing = false;
+  bool _isRetaking = false;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scanDocument());
-  }
+  Future<void> _retake() async {
+    if (_isProcessing || _isRetaking) {
+      return;
+    }
+    _isRetaking = true;
 
-  Future<void> _scanDocument() async {
-    final scanner = DocumentScanner(
-      options: DocumentScannerOptions(
-        documentFormats: {DocumentFormat.jpeg},
-        mode: ScannerMode.base, // crop dan rotasi saja, tanpa filter
-        pageLimit: 1,
-        isGalleryImport: true, // sekalian bisa impor dari galeri
-      ),
-    );
     try {
-      final result = await scanner.scanDocument();
-      final paths = result.images;
-      if (paths == null || paths.isEmpty) {
-        if (mounted) Navigator.of(context).maybePop(); // user batal
+      final outcome = await scanReceipt();
+      if (!mounted) {
         return;
       }
-      final bytes = await File(paths.first).readAsBytes();
-      if (!mounted) return;
-      setState(() {
-        _capturedBytes = bytes;
-        _mimeType = 'image/jpeg';
-      });
-    } catch (e) {
-      _showMessage('Gagal membuka scanner: $e');
+
+      switch (outcome.status) {
+        case ReceiptScanStatus.success:
+          final bytes = outcome.imageBytes;
+          if (bytes == null) {
+            return;
+          }
+          setState(() {
+            _capturedBytes = bytes;
+            _mimeType = 'image/jpeg';
+          });
+        case ReceiptScanStatus.cancelled:
+          return;
+        case ReceiptScanStatus.unsupported:
+          _showMessage('Pemindai struk hanya tersedia di Android.');
+        case ReceiptScanStatus.failure:
+          debugPrint('Gagal memindai ulang: ${outcome.error}');
+          _showMessage('Gagal membuka pemindai struk. Coba lagi.');
+      }
     } finally {
-      scanner.close();
+      _isRetaking = false;
     }
   }
 
-  void _retake() {
-    setState(() => _capturedBytes = null);
-    _scanDocument();
-  }
-
   Future<void> _process() async {
-    final bytes = _capturedBytes;
-    if (bytes == null || _isProcessing) return;
+    if (_isProcessing) {
+      return;
+    }
 
     setState(() => _isProcessing = true);
     try {
       final ReceiptData data = await _service.extractFromImage(
-        bytes,
+        _capturedBytes,
         mimeType: _mimeType,
       );
-      if (!mounted) return;
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => HasilScan(receipt: data)));
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => HasilScan(receipt: data)),
+      );
     } on ReceiptException catch (e) {
       _showMessage(e.message);
     } catch (_) {
       _showMessage('Terjadi kesalahan tak terduga. Coba lagi.');
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
   void _showMessage(String text) {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(text)));
@@ -117,19 +127,7 @@ class _ScanPageState extends State<ScanPage> {
       ),
       body: Stack(
         fit: StackFit.expand,
-        children: [
-          _capturedBytes != null ? _buildPreview() : _buildCamera(),
-          if (_isProcessing) _buildLoading(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCamera() {
-    return Center(
-      child: FilledButton(
-        onPressed: _scanDocument,
-        child: const Text('Scan struk'),
+        children: [_buildPreview(), if (_isProcessing) _buildLoading()],
       ),
     );
   }
@@ -138,7 +136,7 @@ class _ScanPageState extends State<ScanPage> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.memory(_capturedBytes!, fit: BoxFit.contain),
+        Image.memory(_capturedBytes, fit: BoxFit.contain),
         Positioned(
           left: 24,
           right: 24,
