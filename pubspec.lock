@@ -81,6 +81,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.7"
+  dio:
+    dependency: "direct main"
+    description:
+      name: dio
+      sha256: "852ec3b48cc431ac04fff978413c541502b67ffc3e26921e74e3d994694192c1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.11.1"
+  dio_web_adapter:
+    dependency: transitive
+    description:
+      name: dio_web_adapter
+      sha256: "3a1b2cd7be71086f38504956e3ebcd2837288d231ff454bafa78021244102bfc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.2"
   fake_async:
     dependency: transitive
     description:
@@ -144,6 +160,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.0.0"
+  google_mlkit_document_scanner:
+    dependency: "direct main"
+    description:
+      name: google_mlkit_document_scanner
+      sha256: "0ce54cd3318642e771aa5851aa3fbce61eb7d72ca0ecfbb82b433d1b15680a04"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.2"
   hooks:
     dependency: transitive
     description:
@@ -169,7 +193,7 @@ packages:
     source: hosted
     version: "4.1.2"
   intl:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: intl
       sha256: "1ca20c894b1717686a2319b8548763d812bc0aabdac580420a44c5178c57a867"
@@ -288,6 +312,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.0"
+  mime:
+    dependency: transitive
+    description:
+      name: mime
+      sha256: bd47de35f07e27267e69c8c8b22edf9473bfee170a60d60fcc93730c5144b7f6
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   objective_c:
     dependency: transitive
     description:

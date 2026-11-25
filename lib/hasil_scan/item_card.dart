@@ -6,10 +6,11 @@ class ItemCard extends StatelessWidget {
   final String subtext;
   final String price;
 
-  const ItemCard({super.key, 
-  required this.itemName, 
-  required this.subtext, 
-  required this.price
+  const ItemCard({
+    super.key,
+    required this.itemName,
+    required this.subtext,
+    required this.price,
   });
 
   @override
@@ -19,41 +20,46 @@ class ItemCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(itemName,
-                  style: TextStyle(
-                    fontWeight: FontWeight(600),
-                    fontSize: 14,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                // mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text(
+                    itemName,
+                    style: TextStyle(
+                      fontWeight: FontWeight(600),
+                      fontSize: 14,
+                      // overflow: TextOverflow.clip,
+                    ),
                   ),
-                ),
-                Text(subtext,
-                  style: TextStyle(
-                    fontWeight: FontWeight(400),
-                    fontSize: 12,
-                    color: CColors.textGray
+                  Text(
+                    subtext,
+                    style: TextStyle(
+                      fontWeight: FontWeight(400),
+                      fontSize: 12,
+                      color: CColors.textGray,
+                    ),
                   ),
-                )
-              ],
-            ),
-            Spacer(),
-            Text(price,
-              style: TextStyle(
-                fontWeight: FontWeight(600),
-                fontSize: 14,
+                ],
               ),
             ),
+            Spacer(),
+            Text(
+              price,
+              style: TextStyle(fontWeight: FontWeight(600), fontSize: 14),
+            ),
             IconButton(
-              onPressed: () {}, 
-              icon: Icon(Icons.edit_outlined,
+              onPressed: () {},
+              icon: Icon(
+                Icons.edit_outlined,
                 size: 20,
                 color: CColors.textGray,
-              )
-            )
+              ),
+            ),
           ],
         ),
-        Divider(color: CColors.border,)
+        Divider(color: CColors.border),
       ],
     );
   }
