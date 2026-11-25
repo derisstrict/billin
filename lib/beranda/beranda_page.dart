@@ -3,6 +3,7 @@ import 'package:billin/common/c_container.dart';
 import 'package:billin/common/c_icon_box.dart';
 import 'package:billin/common/navbar.dart';
 import 'package:billin/profile/profile_page.dart';
+import 'package:billin/scan/scan_page.dart';
 import 'package:billin/undangan/undangan_benar.dart';
 import 'package:flutter/material.dart';
 
@@ -79,7 +80,7 @@ class _BerandaPageState extends State<BerandaPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const Scaffold(body: Center(child: Text('Scan'))),
+        builder: (_) => const ScanPage(),
       ),
     );
   }
