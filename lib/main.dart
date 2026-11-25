@@ -1,4 +1,4 @@
-import 'package:billin/beranda/beranda_page.dart';
+import 'package:billin/page/landing_page.dart';
 import 'package:billin/split_page.dart';
 import 'package:flutter/material.dart';
 
@@ -15,11 +15,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
         fontFamily: 'Poppins',
       ),
       debugShowCheckedModeBanner: false,
-      home: SplitPage(),
+      home: LandingPage(),
     );
   }
 }
