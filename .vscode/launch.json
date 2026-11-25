@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "billin (emulator + llama)",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": [
+        "--dart-define=LLAMA_BASE_URL=http://10.0.2.2:9931",
+        "--android-skip-build-dependency-validation"
+      ]
+    }
+  ]
+}
