@@ -1,10 +1,11 @@
-import 'package:billin/page/landing_page.dart';
-import 'package:billin/split_page.dart';
+import 'package:billin/beranda/beranda_page.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:billin/auth/login_screen.dart';
 
 Future<void> main() async {
+  await initializeDateFormatting();
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     url: 'https://ytkkkcduwoeksfckyxbi.supabase.co',
@@ -27,7 +28,6 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Poppins',
       ),
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
+      home: BerandaPage(),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:billin/beranda/beranda_page.dart';
 import 'package:billin/common/c_colors.dart';
 import 'package:billin/profile/profile_page.dart';
 import 'package:flutter/material.dart';
@@ -14,8 +15,8 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = const [
-    Center(child: Text('Beranda')), // ganti dengan HomePage()
-    Center(child: ProfilePage()), // ganti dengan ProfilePage()
+    BerandaPage(withNavbar: false),
+    ProfilePage(),
   ];
 
   void _openScanner() {

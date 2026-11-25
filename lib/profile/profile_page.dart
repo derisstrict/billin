@@ -1,15 +1,28 @@
+import 'package:billin/beranda/beranda_page.dart';
+import 'package:billin/common/c_colors.dart';
+import 'package:billin/common/navbar.dart';
 import 'package:billin/main_screen.dart';
 import 'package:billin/profile/about_apps.dart';
 import 'package:billin/profile/change_pass_page.dart';
 import 'package:billin/profile/edit_profile_page.dart';
+import 'package:billin/scan/scan_flow.dart';
 import 'package:flutter/material.dart';
 import 'package:billin/auth/auth_service.dart';
 
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+class ProfilePage extends StatefulWidget {
+  final bool withNavbar;
+  const ProfilePage({super.key, this.withNavbar = true});
 
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
   static const _blue = Color(0xFF2F80ED);
   static const _red = Color(0xFFEB3B4A);
+  int _navIndex = 1;
+
+  void _openScanner() => openReceiptScanner(context);
 
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
@@ -52,90 +65,107 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 130),
-        child: Column(
-          children: [
-            const _ProfileHeader(),
-            const SizedBox(height: 16),
-            _MenuTile(
-              icon: Icons.manage_accounts_outlined,
-              label: 'Edit Profile',
-              onTap: () => Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const EditProfilePage(),
-                  transitionsBuilder: (_, animation, __, child) {
-                    final tween = Tween(
-                      begin: const Offset(1, 0),
-                      end: Offset.zero,
-                    ).chain(CurveTween(curve: Curves.easeOutCubic));
-                    return SlideTransition(
-                      position: animation.drive(tween),
-                      child: child,
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
+    return Scaffold(
+      backgroundColor: CColors.background,
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 130),
+          child: Column(
+            children: [
+              const _ProfileHeader(),
+              const SizedBox(height: 16),
+              _MenuTile(
+                icon: Icons.manage_accounts_outlined,
+                label: 'Edit Profile',
+                onTap: () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => const EditProfilePage(),
+                    transitionsBuilder: (_, animation, __, child) {
+                      final tween = Tween(
+                        begin: const Offset(1, 0),
+                        end: Offset.zero,
+                      ).chain(CurveTween(curve: Curves.easeOutCubic));
+                      return SlideTransition(
+                        position: animation.drive(tween),
+                        child: child,
+                      );
+                    },
+                    transitionDuration: const Duration(milliseconds: 300),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            _MenuTile(
-              icon: Icons.lock_outline,
-              label: 'Ubah Kata Sandi',
-              onTap: () => Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const ChangePasswordPage(),
-                  transitionsBuilder: (_, animation, __, child) {
-                    final tween = Tween(
-                      begin: const Offset(1, 0),
-                      end: Offset.zero,
-                    ).chain(CurveTween(curve: Curves.easeOutCubic));
-                    return SlideTransition(
-                      position: animation.drive(tween),
-                      child: child,
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
+              const SizedBox(height: 8),
+              _MenuTile(
+                icon: Icons.lock_outline,
+                label: 'Ubah Kata Sandi',
+                onTap: () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => const ChangePasswordPage(),
+                    transitionsBuilder: (_, animation, __, child) {
+                      final tween = Tween(
+                        begin: const Offset(1, 0),
+                        end: Offset.zero,
+                      ).chain(CurveTween(curve: Curves.easeOutCubic));
+                      return SlideTransition(
+                        position: animation.drive(tween),
+                        child: child,
+                      );
+                    },
+                    transitionDuration: const Duration(milliseconds: 300),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            _MenuTile(
-              icon: Icons.info_outline,
-              label: 'Tentang Aplikasi',
-              onTap: () => Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const AboutPage(),
-                  transitionsBuilder: (_, animation, __, child) {
-                    final tween = Tween(
-                      begin: const Offset(1, 0),
-                      end: Offset.zero,
-                    ).chain(CurveTween(curve: Curves.easeOutCubic));
-                    return SlideTransition(
-                      position: animation.drive(tween),
-                      child: child,
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
+              const SizedBox(height: 8),
+              _MenuTile(
+                icon: Icons.info_outline,
+                label: 'Tentang Aplikasi',
+                onTap: () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => const AboutPage(),
+                    transitionsBuilder: (_, animation, __, child) {
+                      final tween = Tween(
+                        begin: const Offset(1, 0),
+                        end: Offset.zero,
+                      ).chain(CurveTween(curve: Curves.easeOutCubic));
+                      return SlideTransition(
+                        position: animation.drive(tween),
+                        child: child,
+                      );
+                    },
+                    transitionDuration: const Duration(milliseconds: 300),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            _MenuTile(
-              icon: Icons.logout,
-              label: 'Keluar',
-              color: _red,
-              showChevron: false,
-              onTap: () => _logout(context),
-            ),
-          ],
+              const SizedBox(height: 8),
+              _MenuTile(
+                icon: Icons.logout,
+                label: 'Keluar',
+                color: _red,
+                showChevron: false,
+                onTap: () => _logout(context),
+              ),
+            ],
+          ),
         ),
       ),
+      bottomNavigationBar: widget.withNavbar
+          ? Navbar(
+              currentIndex: _navIndex,
+              onTap: (index) {
+                if (index == 0) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BerandaPage()),
+                  );
+                }
+              },
+              onScanTap: _openScanner,
+            )
+          : null,
     );
   }
 }
@@ -217,10 +247,10 @@ class _ProfileHeader extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.photo_camera_outlined,
                       size: 17,
-                      color: ProfilePage._blue,
+                      color: CColors.accent,
                     ),
                   ),
                 ),
@@ -244,13 +274,13 @@ class _MenuTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.color = ProfilePage._blue,
+    this.color = _ProfilePageState._blue,
     this.showChevron = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDefault = color == ProfilePage._blue;
+    final isDefault = color == _ProfilePageState._blue;
 
     return Material(
       color: Colors.white,
