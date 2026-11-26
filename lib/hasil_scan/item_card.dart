@@ -5,12 +5,14 @@ class ItemCard extends StatelessWidget {
   final String itemName;
   final String subtext;
   final String price;
+  final VoidCallback onPressed;
 
   const ItemCard({
     super.key,
     required this.itemName,
     required this.subtext,
     required this.price,
+    required this.onPressed
   });
 
   @override
@@ -50,7 +52,7 @@ class ItemCard extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight(600), fontSize: 14),
             ),
             IconButton(
-              onPressed: () {},
+              onPressed: onPressed,
               icon: Icon(
                 Icons.edit_outlined,
                 size: 20,

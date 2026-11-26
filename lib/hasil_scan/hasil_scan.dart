@@ -7,6 +7,7 @@ import 'package:billin/model/receipt.dart';
 import 'package:billin/model/receipt_validation.dart';
 import 'package:billin/split_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HasilScan extends StatefulWidget {
   final ReceiptData receipt;
@@ -19,6 +20,169 @@ class HasilScan extends StatefulWidget {
 
 class _HasilScanState extends State<HasilScan> {
   late final ReceiptData _receipt = widget.receipt;
+
+  Widget modifyPopup() {
+    return AlertDialog(
+      title: Row(
+        spacing: 8,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: CColors.accent.withValues(alpha: .3),
+              borderRadius: BorderRadius.circular(5)
+            ),
+            padding: EdgeInsets.all(3),
+            child: Icon(Icons.edit_outlined,
+              color: CColors.accent,
+            )
+            ,
+          ),
+          Text("Edit Item",
+            style: TextStyle(
+              color: CColors.accent,
+              fontWeight: FontWeight(600),
+              fontSize: 18
+            ),
+          )
+        ],
+      ),
+      backgroundColor: Colors.white,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Nama Item",
+            style: TextStyle(
+              color: CColors.textGray
+            ),
+          ),
+          TextField(
+            decoration: InputDecoration(
+              isDense: true,
+              focusColor: Colors.white,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: CColors.textGray
+                )
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: CColors.accent,
+                  width: 2
+                )
+              )
+            ),
+          ),
+          SizedBox(height: 15,),
+          Text("Harga Satuan",
+            style: TextStyle(
+                color: CColors.textGray
+              ),
+          ),
+          TextField(
+            decoration: InputDecoration(
+              isDense: true,
+              focusColor: Colors.white,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: CColors.textGray
+                )
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: CColors.accent,
+                  width: 2
+                )
+              )
+            ),
+          ),
+          SizedBox(height: 15,),
+          Text("Jumlah Porsi",
+            style: TextStyle(
+              color: CColors.textGray
+            ),
+          ),
+          TextField(
+            keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              isDense: true,
+              focusColor: Colors.white,
+              prefixIcon: IconButton(
+                style: const ButtonStyle(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(
+                  minHeight: 14,
+                  minWidth: 14
+                ),
+                onPressed: () {}, 
+                icon: Icon(Icons.add,
+                  color: CColors.accent,
+                )
+              ),
+              suffixIcon: IconButton(
+                style: const ButtonStyle(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(
+                  minHeight: 14,
+                  minWidth: 14
+                ),
+                onPressed: () {}, 
+                icon: Icon(Icons.remove,
+                  color: CColors.accent,
+                )
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide(
+                  color: CColors.textGray,
+                )
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: CColors.accent,
+                  width: 2
+                )
+              )
+            ),
+          )
+        ],
+      ),
+      actions: <Widget>[
+        Row(
+          children: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel',
+                style: TextStyle(
+                  color: Colors.black
+                ),
+              ),
+            ),
+            Spacer(),
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'OK'),
+              child: const Text('OK',
+                style: TextStyle(
+                  color: Colors.black
+                ),
+              ),
+            ),
+          ],
+        )
+        
+      ],
+    );
+  }
 
   Widget _summaryRow(String label, String value, {bool accent = false}) {
     final accentStyle = TextStyle(
@@ -41,7 +205,10 @@ class _HasilScanState extends State<HasilScan> {
           constraints: BoxConstraints(
             minHeight: 32,
           ),
-          onPressed: () {},
+          onPressed: () => showDialog<String>(
+            context: context,
+            builder: (BuildContext context) => modifyPopup()
+          ),
           style: const ButtonStyle(
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -210,7 +377,11 @@ class _HasilScanState extends State<HasilScan> {
                               subtext:
                                   '${item.qtyLabel} x ${formatRupiah(item.price)}',
                               price: formatRupiah(item.total),
-                            ),
+                              onPressed: () => showDialog<String>(
+                                context: context,
+                                builder: (BuildContext context) => modifyPopup()
+                              ),
+                            )
                           ),
                         const SizedBox(height: 10),
                         Container(
