@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Poppins',
       ),
       debugShowCheckedModeBanner: false,
-      home: BerandaPage(),
+      home: LoginScreen(),
     );
   }
 }

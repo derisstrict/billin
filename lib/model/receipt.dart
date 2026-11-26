@@ -36,6 +36,10 @@ class ReceiptItem {
     }
     return qty.toString();
   }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'name': name, 'qty': qty, 'price': price, 'total': total};
+  }
 }
 
 class ReceiptData {
@@ -121,6 +125,19 @@ class ReceiptData {
   }
 
   String get dateLabel => formatReceiptDate(date);
+
+  Map<String, dynamic> toJson() {
+    return {
+      'merchant_name': merchantName,
+      'date': date,
+      'items': items.map((item) => item.toJson()).toList(),
+      'subtotal': subtotal,
+      'tax': tax,
+      'service_charge': serviceCharge,
+      'discounts': discounts,
+      'grand_total': grandTotal,
+    };
+  }
 }
 
 String _asString(dynamic value) {

@@ -10,6 +10,25 @@ class CColors {
   static Color textShared = Color(0xFF00A63E);
   static Color textEach = Color(0xFF7F22FE);
 
+  // Keep in sync with MEMBER_COLORS in billin-web/billin.py.
+  static const List<Color> memberPalette = [
+    Color(0xFF2196F3),
+    Color(0xFFA800B7),
+    Color(0xFF5EA500),
+    Color(0xFFF59E0B),
+    Color(0xFFEF4444),
+    Color(0xFF14B8A6),
+    Color(0xFF8B5CF6),
+    Color(0xFFEC4899),
+  ];
+
+  static Color memberColor(int index) {
+    if (memberPalette.isEmpty) {
+      return accent;
+    }
+    return memberPalette[index.abs() % memberPalette.length];
+  }
+
   // Status colors for undangan dialogs
   static Color success = Color(0xFF5EA500);
   static Color successLight = Color(0xFFDDECC9);
