@@ -3,6 +3,7 @@ import 'package:billin/common/c_colors.dart';
 import 'package:billin/profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:billin/common/navbar.dart';
+import 'package:billin/scan/scan_flow.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,14 +20,7 @@ class _MainScreenState extends State<MainScreen> {
     ProfilePage(),
   ];
 
-  void _openScanner() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const Scaffold(body: Center(child: Text('Scan'))),
-      ),
-    );
-  }
+  void _openScanner() => openReceiptScanner(context);
 
   @override
   Widget build(BuildContext context) {

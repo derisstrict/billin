@@ -6,6 +6,7 @@ import 'package:billin/profile/profile_page.dart';
 import 'package:billin/scan/scan_flow.dart';
 import 'package:billin/undangan/undangan_benar.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ─────────────────────────────────────────────
 // Data model lokal untuk Riwayat Split Bill
@@ -124,44 +125,60 @@ class _BerandaHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Selamat datang,',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight(400),
-                  color: CColors.text,
-                ),
+    final auth = Supabase.instance.client.auth;
+
+    return StreamBuilder<AuthState>(
+      stream: auth.onAuthStateChange,
+      builder: (context, _) {
+        final user = auth.currentUser;
+        final meta = user?.userMetadata;
+        final email = user?.email ?? '';
+        final name = (meta?['username'] as String?)?.trim();
+
+        final username = (name != null && name.isNotEmpty)
+            ? name
+            : email.split('@').first; // cadangan kalau username belum diisi
+        final avatarUrl = meta?['avatar_url'] as String?;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Selamat datang,',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight(400),
+                      color: CColors.text,
+                    ),
+                  ),
+                  Text(
+                    username,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight(700),
+                      color: CColors.text,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                'Username',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight(700),
-                  color: CColors.text,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: const BoxDecoration(
-            color: Color(0xFFD9D9D9),
-            shape: BoxShape.circle,
-          ),
-          child: const Center(
-            child: Icon(Icons.person, size: 28, color: Color(0xFF9E9E9E)),
-          ),
-        ),
-      ],
+            ),
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: const Color(0xFFD9D9D9),
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl)
+                  : null,
+              child: avatarUrl == null
+                  ? const Icon(Icons.person, size: 28, color: Color(0xFF9E9E9E))
+                  : null,
+            ),
+          ],
+        );
+      },
     );
   }
 }

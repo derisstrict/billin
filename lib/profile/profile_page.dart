@@ -1,13 +1,15 @@
-import 'package:billin/beranda/beranda_page.dart';
 import 'package:billin/common/c_colors.dart';
-import 'package:billin/common/navbar.dart';
-import 'package:billin/main_screen.dart';
 import 'package:billin/profile/about_apps.dart';
 import 'package:billin/profile/change_pass_page.dart';
 import 'package:billin/profile/edit_profile_page.dart';
-import 'package:billin/scan/scan_flow.dart';
 import 'package:flutter/material.dart';
 import 'package:billin/auth/auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'dart:async';
+import 'dart:io';
+
+import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool withNavbar;
@@ -18,11 +20,97 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final supabase = Supabase.instance.client;
+
+  String _username = '';
+  String _email = '';
+  String? _avatarUrl;
+  bool _loading = true;
+
+  late final StreamSubscription<AuthState> _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+    _sub = supabase.auth.onAuthStateChange.listen((_) {
+      if (mounted) _loadProfile();
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+
+  void _loadProfile() {
+    if (!mounted) return;
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      setState(() => _loading = false);
+      return;
+    }
+    final meta = user.userMetadata;
+    final email = user.email ?? '';
+    final name = (meta?['username'] as String?)?.trim();
+
+    setState(() {
+      _email = email;
+      _username = (name != null && name.isNotEmpty)
+          ? name
+          : email.split('@').first;
+      _avatarUrl = meta?['avatar_url'] as String?;
+      _loading = false;
+    });
+  }
+
   static const _blue = Color(0xFF2F80ED);
   static const _red = Color(0xFFEB3B4A);
-  int _navIndex = 1;
+  bool _uploading = false;
 
-  void _openScanner() => openReceiptScanner(context);
+  Future<void> _changePhoto() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 80,
+    );
+    if (picked == null) return;
+
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    setState(() => _uploading = true);
+    try {
+      final path = '${user.id}/avatar.jpg';
+
+      await supabase.storage
+          .from('foto_profile')
+          .upload(
+            path,
+            File(picked.path),
+            fileOptions: const FileOptions(
+              upsert: true,
+              contentType: 'image/jpeg',
+            ),
+          );
+
+      final url =
+          '${supabase.storage.from('foto_profile').getPublicUrl(path)}?v=${DateTime.now().millisecondsSinceEpoch}';
+
+      await supabase.auth.updateUser(UserAttributes(data: {'avatar_url': url}));
+
+      if (!mounted) return;
+      setState(() => _avatarUrl = url);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Gagal mengganti foto: $e')));
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
 
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
@@ -44,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () => AuthService().signOut(context),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Keluar', style: TextStyle(color: _red)),
           ),
         ],
@@ -54,13 +142,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (confirm != true) return;
 
     if (!context.mounted) return;
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => const MainScreen(),
-      ), //arahkan ke halaman login
-      (route) => false,
-    );
+    await AuthService().signOut(context);
   }
 
   @override
@@ -73,28 +155,39 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 130),
           child: Column(
             children: [
-              const _ProfileHeader(),
+              _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _ProfileHeader(
+                      username: _username,
+                      email: _email,
+                      avatarUrl: _avatarUrl,
+                      uploading: _uploading,
+                      onChangePhoto: _changePhoto,
+                    ),
               const SizedBox(height: 16),
               _MenuTile(
                 icon: Icons.manage_accounts_outlined,
                 label: 'Edit Profile',
-                onTap: () => Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const EditProfilePage(),
-                    transitionsBuilder: (_, animation, __, child) {
-                      final tween = Tween(
-                        begin: const Offset(1, 0),
-                        end: Offset.zero,
-                      ).chain(CurveTween(curve: Curves.easeOutCubic));
-                      return SlideTransition(
-                        position: animation.drive(tween),
-                        child: child,
-                      );
-                    },
-                    transitionDuration: const Duration(milliseconds: 300),
-                  ),
-                ),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (_, __, ___) => const EditProfilePage(),
+                      transitionsBuilder: (_, animation, __, child) {
+                        final tween = Tween(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).chain(CurveTween(curve: Curves.easeOutCubic));
+                        return SlideTransition(
+                          position: animation.drive(tween),
+                          child: child,
+                        );
+                      },
+                      transitionDuration: const Duration(milliseconds: 300),
+                    ),
+                  );
+                  if (mounted) _loadProfile();
+                },
               ),
               const SizedBox(height: 8),
               _MenuTile(
@@ -152,27 +245,25 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-      bottomNavigationBar: widget.withNavbar
-          ? Navbar(
-              currentIndex: _navIndex,
-              onTap: (index) {
-                if (index == 0) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const BerandaPage()),
-                  );
-                }
-              },
-              onScanTap: _openScanner,
-            )
-          : null,
     );
   }
 }
 
 /// Kartu putih berisi avatar, username, dan email
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader();
+  final String username;
+  final String email;
+  final String? avatarUrl;
+  final bool uploading;
+  final VoidCallback onChangePhoto;
+
+  const _ProfileHeader({
+    required this.username,
+    required this.email,
+    required this.avatarUrl,
+    required this.uploading,
+    required this.onChangePhoto,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +284,7 @@ class _ProfileHeader extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                'Username',
+                username,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -202,7 +293,7 @@ class _ProfileHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'emailuser@gmail.com',
+                email,
                 style: TextStyle(fontSize: 13, color: const Color(0xFF9E9E9E)),
               ),
             ],
@@ -216,24 +307,25 @@ class _ProfileHeader extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
-                width: avatarSize,
-                height: avatarSize,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFD9D9D9),
-                ),
-                child: const Icon(
-                  Icons.person,
-                  size: 64,
-                  color: Color(0xFF9E9E9E),
-                ),
+              CircleAvatar(
+                radius: avatarSize / 2,
+                backgroundColor: const Color(0xFFD9D9D9),
+                backgroundImage: avatarUrl != null
+                    ? NetworkImage(avatarUrl!)
+                    : null,
+                child: avatarUrl == null
+                    ? const Icon(
+                        Icons.person,
+                        size: 64,
+                        color: Color(0xFF9E9E9E),
+                      )
+                    : null,
               ),
               Positioned(
                 right: 2,
                 bottom: 6,
                 child: GestureDetector(
-                  onTap: () {}, //ganti foto profil
+                  onTap: uploading ? null : onChangePhoto, //ganti foto profil
                   child: Container(
                     width: 32,
                     height: 32,
@@ -247,11 +339,16 @@ class _ProfileHeader extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.photo_camera_outlined,
-                      size: 17,
-                      color: CColors.accent,
-                    ),
+                    child: uploading
+                        ? const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            Icons.photo_camera_outlined,
+                            size: 17,
+                            color: CColors.accent,
+                          ),
                   ),
                 ),
               ),

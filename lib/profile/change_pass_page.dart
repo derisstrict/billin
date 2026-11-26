@@ -1,5 +1,6 @@
 import 'package:billin/common/c_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -11,6 +12,9 @@ class ChangePasswordPage extends StatefulWidget {
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
   static const _blue = Color(0xFF2F80ED);
   static const _green = Color(0xFF5BA800);
+
+  final _supabase = Supabase.instance.client;
+  bool _saving = false;
 
   final _oldCtrl = TextEditingController();
   final _newCtrl = TextEditingController();
@@ -24,14 +28,72 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     super.dispose();
   }
 
-  void _save() {
-    // TODO: validasi dan kirim ke API
-    if (_newCtrl.text != _confirmCtrl.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Konfirmasi kata sandi tidak sama')),
-      );
+  Future<void> _save() async {
+    if (_saving) return;
+
+    final user = _supabase.auth.currentUser;
+    final email = user?.email;
+    final oldPass = _oldCtrl.text;
+    final newPass = _newCtrl.text;
+
+    if (user == null || email == null) {
+      _msg('Sesi berakhir. Silakan login ulang.', error: true);
       return;
     }
+    if (oldPass.isEmpty || newPass.isEmpty || _confirmCtrl.text.isEmpty) {
+      _msg('Semua kolom wajib diisi.', error: true);
+      return;
+    }
+    if (newPass.length < 6) {
+      _msg('Kata sandi baru minimal 6 karakter.', error: true);
+      return;
+    }
+    if (newPass != _confirmCtrl.text) {
+      _msg('Konfirmasi kata sandi tidak sama.', error: true);
+      return;
+    }
+    if (newPass == oldPass) {
+      _msg('Kata sandi baru harus berbeda dari yang lama.', error: true);
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      // 1. verifikasi sandi lama
+      await _supabase.auth.signInWithPassword(email: email, password: oldPass);
+    } on AuthException {
+      _msg('Kata sandi lama salah.', error: true);
+      if (mounted) setState(() => _saving = false);
+      return;
+    } catch (e) {
+      _msg('Gagal memverifikasi: $e', error: true);
+      if (mounted) setState(() => _saving = false);
+      return;
+    }
+
+    try {
+      // 2. ganti sandi
+      await _supabase.auth.updateUser(UserAttributes(password: newPass));
+      if (!mounted) return;
+      _msg('Kata sandi berhasil diubah.');
+      Navigator.pop(context);
+    } on AuthException catch (e) {
+      _msg(e.message, error: true);
+    } catch (e) {
+      _msg('Gagal menyimpan: $e', error: true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _msg(String text, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: error ? Colors.red : Colors.green,
+        content: Text(text, style: const TextStyle(color: Colors.white)),
+      ),
+    );
   }
 
   @override
@@ -69,8 +131,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton.icon(
-                  onPressed: _save,
-                  icon: const Icon(Icons.check, size: 18),
+                  onPressed: _saving ? null : _save,
+                  icon: _saving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.check, size: 18),
                   label: const Text(
                     'Simpan',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),

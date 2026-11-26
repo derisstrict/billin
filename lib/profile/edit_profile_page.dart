@@ -1,5 +1,6 @@
 import 'package:billin/common/c_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -12,8 +13,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
   static const _blue = Color(0xFF2F80ED);
   static const _green = Color(0xFF5BA800);
 
+  final _supabase = Supabase.instance.client;
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = _supabase.auth.currentUser;
+    final email = user?.email ?? '';
+    final name = (user?.userMetadata?['username'] as String?)?.trim();
+
+    _emailCtrl.text = email;
+    _nameCtrl.text = (name != null && name.isNotEmpty)
+        ? name
+        : email.split('@').first;
+  }
 
   @override
   void dispose() {
@@ -22,8 +38,57 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
-  void _save() {
-    // TODO: validasi dan kirim ke API
+  Future<void> _save() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null || _saving) return;
+
+    final name = _nameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+
+    if (name.isEmpty) {
+      _msg('Nama pengguna tidak boleh kosong.', error: true);
+      return;
+    }
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      _msg('Format email tidak valid.', error: true);
+      return;
+    }
+
+    final emailChanged = email != (user.email ?? '');
+
+    setState(() => _saving = true);
+    try {
+      await _supabase.auth.updateUser(
+        UserAttributes(
+          email: emailChanged ? email : null,
+          data: {'username': name, 'display_name': name},
+        ),
+      );
+
+      if (!mounted) return;
+      _msg(
+        emailChanged
+            ? 'Tersimpan. Cek email baru untuk konfirmasi perubahan.'
+            : 'Profil berhasil diperbarui.',
+      );
+      Navigator.pop(context);
+    } on AuthException catch (e) {
+      _msg(e.message, error: true);
+    } catch (e) {
+      _msg('Gagal menyimpan: $e', error: true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _msg(String text, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: error ? Colors.red : Colors.green,
+        content: Text(text, style: const TextStyle(color: Colors.white)),
+      ),
+    );
   }
 
   @override
@@ -41,14 +106,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const SizedBox(height: 14),
               _LabeledField(
                 label: 'Nama Pengguna',
-                hint: 'Masukkan nama pengguna',
+                hint: 'Ubah nama pengguna baru',
                 controller: _nameCtrl,
                 keyboardType: TextInputType.name,
               ),
               const SizedBox(height: 14),
               _LabeledField(
                 label: 'Email',
-                hint: 'Masukkan email',
+                hint: 'Masukkan email baru yang valid',
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -57,8 +122,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton.icon(
-                  onPressed: _save,
-                  icon: const Icon(Icons.check, size: 18),
+                  onPressed: _saving ? null : _save,
+                  icon: _saving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.check, size: 18),
                   label: const Text(
                     'Simpan',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
