@@ -10,8 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:billin/auth/auth_service.dart';
 
 class ProfilePage extends StatefulWidget {
-  final bool withNavbar;
-  const ProfilePage({super.key, this.withNavbar = true});
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -20,9 +19,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   static const _blue = Color(0xFF2F80ED);
   static const _red = Color(0xFFEB3B4A);
-  int _navIndex = 1;
-
-  void _openScanner() => openReceiptScanner(context);
 
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
@@ -152,20 +148,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-      bottomNavigationBar: widget.withNavbar
-          ? Navbar(
-              currentIndex: _navIndex,
-              onTap: (index) {
-                if (index == 0) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const BerandaPage()),
-                  );
-                }
-              },
-              onScanTap: _openScanner,
-            )
-          : null,
     );
   }
 }

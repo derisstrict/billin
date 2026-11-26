@@ -1,6 +1,7 @@
 import 'package:billin/beranda/beranda_page.dart';
 import 'package:billin/common/c_colors.dart';
 import 'package:billin/profile/profile_page.dart';
+import 'package:billin/scan/scan_flow.dart';
 import 'package:flutter/material.dart';
 import 'package:billin/common/navbar.dart';
 
@@ -15,18 +16,11 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = const [
-    BerandaPage(withNavbar: false),
+    BerandaPage(),
     ProfilePage(),
   ];
 
-  void _openScanner() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const Scaffold(body: Center(child: Text('Scan'))),
-      ),
-    );
-  }
+  void _openScanner() => openReceiptScanner(context);
 
   @override
   Widget build(BuildContext context) {

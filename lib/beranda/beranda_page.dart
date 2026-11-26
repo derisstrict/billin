@@ -57,8 +57,7 @@ typedef HomePage = BerandaPage;
 // Halaman Beranda (Home Screen)
 // ─────────────────────────────────────────────
 class BerandaPage extends StatefulWidget {
-  final bool withNavbar;
-  const BerandaPage({super.key, this.withNavbar = true});
+  const BerandaPage({super.key});
 
   @override
   State<BerandaPage> createState() => _BerandaPageState();
@@ -67,7 +66,6 @@ class BerandaPage extends StatefulWidget {
 class _BerandaPageState extends State<BerandaPage> {
   final TextEditingController _linkController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  int _navIndex = 0;
 
   @override
   void dispose() {
@@ -76,42 +74,23 @@ class _BerandaPageState extends State<BerandaPage> {
     super.dispose();
   }
 
-  void _openScanner() => openReceiptScanner(context);
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: CColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 16,
-            children: [
-              const _BerandaHeader(),
-              const _DashboardGrid(),
-              _JoinSplitBillCard(linkController: _linkController),
-              _RiwayatSection(searchController: _searchController),
-            ],
-          ),
+    return SafeArea(
+      bottom: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 16,
+          children: [
+            const _BerandaHeader(),
+            const _DashboardGrid(),
+            _JoinSplitBillCard(linkController: _linkController),
+            _RiwayatSection(searchController: _searchController),
+          ],
         ),
       ),
-      bottomNavigationBar: widget.withNavbar
-          ? Navbar(
-              currentIndex: _navIndex,
-              onTap: (index) {
-                if (index == 1) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfilePage()),
-                  );
-                }
-              },
-              onScanTap: _openScanner,
-            )
-          : null,
     );
   }
 }
