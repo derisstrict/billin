@@ -37,6 +37,22 @@ class ReceiptItem {
     return qty.toString();
   }
 
+  ReceiptItem copyWith({
+    int? id,
+    String? name,
+    num? qty,
+    int? price,
+    int? total,
+  }) {
+    return ReceiptItem(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      qty: qty ?? this.qty,
+      price: price ?? this.price,
+      total: total ?? this.total,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {'id': id, 'name': name, 'qty': qty, 'price': price, 'total': total};
   }
@@ -125,6 +141,28 @@ class ReceiptData {
   }
 
   String get dateLabel => formatReceiptDate(date);
+
+  ReceiptData copyWith({
+    String? merchantName,
+    String? date,
+    List<ReceiptItem>? items,
+    num? subtotal,
+    int? tax,
+    int? serviceCharge,
+    int? discounts,
+    int? grandTotal,
+  }) {
+    return ReceiptData(
+      merchantName: merchantName ?? this.merchantName,
+      date: date ?? this.date,
+      items: items ?? this.items,
+      subtotal: subtotal ?? this.subtotal,
+      tax: tax ?? this.tax,
+      serviceCharge: serviceCharge ?? this.serviceCharge,
+      discounts: discounts ?? this.discounts,
+      grandTotal: grandTotal ?? this.grandTotal,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
