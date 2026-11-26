@@ -37,10 +37,15 @@ class _HasilScanState extends State<HasilScan> {
               : const TextStyle(fontWeight: FontWeight(700)),
         ),
         IconButton(
-          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-          constraints: BoxConstraints(),
+          padding: EdgeInsets.fromLTRB(10, 4, 10, 4),
+          constraints: BoxConstraints(
+            minHeight: 32,
+          ),
           onPressed: () {},
-          icon: Icon(Icons.edit_outlined, size: 20, color: CColors.textGray),
+          style: const ButtonStyle(
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+                  icon: Icon(Icons.edit_outlined, size: 20, color: CColors.textGray),
         ),
       ],
     );
@@ -249,7 +254,7 @@ class _HasilScanState extends State<HasilScan> {
                         ),
                         const SizedBox(height: 15),
                         Column(
-                          spacing: 5,
+                          spacing: 2,
                           children: [
                             _summaryRow(
                               "Subtotal ($itemCount item)",
