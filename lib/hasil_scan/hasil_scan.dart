@@ -514,6 +514,7 @@ InputDecoration _dialogInputDecoration({
 
 Widget _dialogTitle(
   String title, {
+  required VoidCallback onCancel,
   IconData icon = Icons.edit_outlined,
 }) {
   return Row(
@@ -535,6 +536,15 @@ Widget _dialogTitle(
           fontSize: 18,
         ),
       ),
+      Spacer(),
+      IconButton(
+        style: IconButton.styleFrom(
+          visualDensity: VisualDensity.compact
+        ),
+        onPressed: onCancel, 
+        iconSize: 18,
+        icon: Icon(Icons.close)
+      )
     ],
   );
 }
@@ -546,22 +556,31 @@ List<Widget> _dialogActions({
 }) {
   return [
     Row(
+      spacing: 3,
       children: [
-        TextButton(
-          onPressed: onCancel,
-          child: const Text('Cancel', style: TextStyle(color: Colors.black)),
-        ),
-        const Spacer(),
         if (onDelete != null) ...[
-          TextButton(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.comfortable,
+              side: BorderSide(
+                color: CColors.border
+              )
+            ),
             onPressed: onDelete,
-            child: Text('Delete', style: TextStyle(color: CColors.danger)),
+            child: Text('Hapus', style: TextStyle(color: CColors.danger)),
           ),
-          const Spacer(),
         ],
-        TextButton(
+        const Spacer(),
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            visualDensity: VisualDensity.comfortable,
+            backgroundColor: CColors.accent,
+            side: BorderSide(
+              color: CColors.border
+            )
+          ),
           onPressed: onConfirm,
-          child: const Text('OK', style: TextStyle(color: Colors.black)),
+          child: Text('Simpan', style: TextStyle(color: Colors.white)),
         ),
       ],
     ),
@@ -668,7 +687,7 @@ class _EditItemDialogState extends State<_EditItemDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: _dialogTitle(widget.title, icon: widget.icon),
+      title: _dialogTitle(widget.title, icon: widget.icon, onCancel: () => Navigator.pop(context),),
       backgroundColor: Colors.white,
       content: SingleChildScrollView(
         child: Column(
@@ -787,7 +806,7 @@ class _EditSummaryDialogState extends State<_EditSummaryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: _dialogTitle('Edit ${widget.label}'),
+      title: _dialogTitle('Edit ${widget.label}', onCancel: () => Navigator.pop(context)),
       backgroundColor: Colors.white,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
