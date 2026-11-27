@@ -1,20 +1,19 @@
 import 'dart:convert';
 
 import 'package:billin/model/receipt.dart';
+import 'package:billin/service/base_url_config.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 const _promptAsset = 'assets/prompts/receipt_extraction.json';
-const _baseUrlPrefsKey = 'llama_base_url';
 
 // Override for an Android emulator or a physical device, e.g.:
 //   flutter run --dart-define=LLAMA_BASE_URL=http://10.0.2.2:9931
 // The llama.cpp server must also listen on 0.0.0.0 (`--host 0.0.0.0`).
 const _defaultBaseUrl = String.fromEnvironment(
   'LLAMA_BASE_URL',
-  defaultValue: 'http://127.0.0.1:9931',
+  defaultValue: 'http://10.0.2.2:9931',
 );
 
 class ReceiptService {
@@ -24,7 +23,7 @@ class ReceiptService {
           dio ??
           Dio(
             BaseOptions(
-              baseUrl: _normalizeBaseUrl(baseUrl ?? baseUrlNotifier.value),
+              baseUrl: BaseUrlConfig.normalize(baseUrl ?? baseUrlNotifier.value),
               connectTimeout: const Duration(seconds: 10),
               sendTimeout: const Duration(minutes: 1),
               receiveTimeout: const Duration(minutes: 5),
@@ -32,57 +31,19 @@ class ReceiptService {
             ),
           );
 
-  /// Reactive base URL used by default-constructed [ReceiptService] instances.
-  static final ValueNotifier<String> baseUrlNotifier = ValueNotifier<String>(
-    _normalizeBaseUrl(_defaultBaseUrl),
+  /// Reactive base URL config used by default-constructed [ReceiptService] instances.
+  static final BaseUrlConfig baseUrlConfig = BaseUrlConfig(
+    prefsKey: 'llama_base_url',
+    defaultUrlBuilder: () => _defaultBaseUrl,
   );
 
-  static String get defaultBaseUrl => _normalizeBaseUrl(_defaultBaseUrl);
-  static String get currentBaseUrl => baseUrlNotifier.value;
-
-  /// Validates a llama.cpp server base URL, returning an error message or null.
-  static String? validateBaseUrl(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return 'URL server tidak boleh kosong.';
-    }
-    final uri = Uri.tryParse(trimmed);
-    if (uri == null ||
-        !uri.hasScheme ||
-        (uri.scheme != 'http' && uri.scheme != 'https') ||
-        uri.host.isEmpty) {
-      return 'Masukkan URL valid dengan http:// atau https://.';
-    }
-    return null;
-  }
-
-  /// Loads any previously persisted base URL from [SharedPreferences].
-  static Future<void> loadSavedBaseUrl() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_baseUrlPrefsKey);
-    if (saved != null && validateBaseUrl(saved) == null) {
-      baseUrlNotifier.value = _normalizeBaseUrl(saved);
-    }
-  }
-
-  /// Updates the active base URL in real time and persists it.
-  static Future<void> setBaseUrl(String url) async {
-    final error = validateBaseUrl(url);
-    if (error != null) {
-      throw ArgumentError(error);
-    }
-    final normalized = _normalizeBaseUrl(url);
-    baseUrlNotifier.value = normalized;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_baseUrlPrefsKey, normalized);
-  }
-
-  /// Resets the active base URL to [defaultBaseUrl] and clears persistence.
-  static Future<void> resetBaseUrl() async {
-    baseUrlNotifier.value = defaultBaseUrl;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_baseUrlPrefsKey);
-  }
+  static ValueNotifier<String> get baseUrlNotifier => baseUrlConfig.notifier;
+  static String get defaultBaseUrl => baseUrlConfig.defaultUrl;
+  static String get currentBaseUrl => baseUrlConfig.currentUrl;
+  static String? validateBaseUrl(String value) => BaseUrlConfig.validate(value);
+  static Future<void> loadSavedBaseUrl() => baseUrlConfig.loadSaved();
+  static Future<void> setBaseUrl(String url) => baseUrlConfig.setUrl(url);
+  static Future<void> resetBaseUrl() => baseUrlConfig.resetUrl();
 
   final Dio _dio;
   final bool _useGlobalBaseUrl;
@@ -271,12 +232,4 @@ class ReceiptException implements Exception {
 
   @override
   String toString() => message;
-}
-
-String _normalizeBaseUrl(String value) {
-  final trimmed = value.trim();
-  if (trimmed.endsWith('/')) {
-    return trimmed.substring(0, trimmed.length - 1);
-  }
-  return trimmed;
 }

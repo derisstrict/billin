@@ -1,5 +1,6 @@
 import 'package:billin/model/group.dart';
 import 'package:billin/model/receipt.dart';
+import 'package:billin/service/base_url_config.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -7,11 +8,12 @@ const _configuredBaseUrl = String.fromEnvironment('BILLIN_API_BASE_URL');
 
 class GroupService {
   GroupService({Dio? dio, String? baseUrl})
-    : _dio =
+    : _useGlobalBaseUrl = dio == null && baseUrl == null,
+      _dio =
           dio ??
           Dio(
             BaseOptions(
-              baseUrl: _normalizeBaseUrl(baseUrl ?? _defaultBaseUrl),
+              baseUrl: BaseUrlConfig.normalize(baseUrl ?? baseUrlNotifier.value),
               connectTimeout: const Duration(seconds: 8),
               sendTimeout: const Duration(seconds: 8),
               receiveTimeout: const Duration(seconds: 8),
@@ -19,7 +21,25 @@ class GroupService {
             ),
           );
 
+  /// Reactive base URL config used by default-constructed [GroupService] instances.
+  static final BaseUrlConfig baseUrlConfig = BaseUrlConfig(
+    prefsKey: 'billin_api_base_url',
+    defaultUrlBuilder: () => _defaultBaseUrl,
+  );
+
+  static ValueNotifier<String> get baseUrlNotifier => baseUrlConfig.notifier;
+  static String get defaultBaseUrl => baseUrlConfig.defaultUrl;
+  static String get currentBaseUrl => baseUrlConfig.currentUrl;
+  static String? validateBaseUrl(String value) => BaseUrlConfig.validate(value);
+  static Future<void> loadSavedBaseUrl() => baseUrlConfig.loadSaved();
+  static Future<void> setBaseUrl(String url) => baseUrlConfig.setUrl(url);
+  static Future<void> resetBaseUrl() => baseUrlConfig.resetUrl();
+
   final Dio _dio;
+  final bool _useGlobalBaseUrl;
+
+  String get activeBaseUrl =>
+      _useGlobalBaseUrl ? baseUrlNotifier.value : _dio.options.baseUrl;
 
   static String get _defaultBaseUrl {
     if (_configuredBaseUrl.trim().isNotEmpty) {
@@ -101,6 +121,9 @@ class GroupService {
   }
 
   Future<T> _guard<T>(Future<T> Function() action) async {
+    if (_useGlobalBaseUrl) {
+      _dio.options.baseUrl = baseUrlNotifier.value;
+    }
     try {
       return await action();
     } on GroupException {
@@ -185,12 +208,4 @@ Map<String, dynamic> _asMap(dynamic value) {
     return Map<String, dynamic>.from(value);
   }
   throw const GroupException('Respons server tidak valid.');
-}
-
-String _normalizeBaseUrl(String value) {
-  final trimmed = value.trim();
-  if (trimmed.endsWith('/')) {
-    return trimmed.substring(0, trimmed.length - 1);
-  }
-  return trimmed;
 }
