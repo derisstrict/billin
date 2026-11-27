@@ -2,6 +2,7 @@ import 'package:billin/beranda/beranda_page.dart';
 import 'package:billin/developer_setting.dart';
 import 'package:billin/hasil_scan/hasil_scan.dart';
 import 'package:billin/model/receipt.dart';
+import 'package:billin/service/group_service.dart';
 import 'package:billin/service/receipt_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -11,7 +12,10 @@ import 'package:billin/auth/login_screen.dart';
 Future<void> main() async {
   await initializeDateFormatting();
   WidgetsFlutterBinding.ensureInitialized();
-  await ReceiptService.loadSavedBaseUrl();
+  await Future.wait([
+    ReceiptService.loadSavedBaseUrl(),
+    GroupService.loadSavedBaseUrl(),
+  ]);
   await Supabase.initialize(
     url: 'https://ytkkkcduwoeksfckyxbi.supabase.co',
     publishableKey: 'sb_publishable_kqD4gvu7gUftjBYNGYUyvw_rVx9_Ldc',
