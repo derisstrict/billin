@@ -2,9 +2,12 @@ import 'dart:convert';
 
 import 'package:billin/model/receipt.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _promptAsset = 'assets/prompts/receipt_extraction.json';
+const _baseUrlPrefsKey = 'llama_base_url';
 
 // Override for an Android emulator or a physical device, e.g.:
 //   flutter run --dart-define=LLAMA_BASE_URL=http://10.0.2.2:9931
@@ -16,11 +19,12 @@ const _defaultBaseUrl = String.fromEnvironment(
 
 class ReceiptService {
   ReceiptService({Dio? dio, String? baseUrl})
-    : _dio =
+    : _useGlobalBaseUrl = dio == null && baseUrl == null,
+      _dio =
           dio ??
           Dio(
             BaseOptions(
-              baseUrl: _normalizeBaseUrl(baseUrl ?? _defaultBaseUrl),
+              baseUrl: _normalizeBaseUrl(baseUrl ?? baseUrlNotifier.value),
               connectTimeout: const Duration(seconds: 10),
               sendTimeout: const Duration(minutes: 1),
               receiveTimeout: const Duration(minutes: 5),
@@ -28,8 +32,64 @@ class ReceiptService {
             ),
           );
 
+  /// Reactive base URL used by default-constructed [ReceiptService] instances.
+  static final ValueNotifier<String> baseUrlNotifier = ValueNotifier<String>(
+    _normalizeBaseUrl(_defaultBaseUrl),
+  );
+
+  static String get defaultBaseUrl => _normalizeBaseUrl(_defaultBaseUrl);
+  static String get currentBaseUrl => baseUrlNotifier.value;
+
+  /// Validates a llama.cpp server base URL, returning an error message or null.
+  static String? validateBaseUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 'URL server tidak boleh kosong.';
+    }
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null ||
+        !uri.hasScheme ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        uri.host.isEmpty) {
+      return 'Masukkan URL valid dengan http:// atau https://.';
+    }
+    return null;
+  }
+
+  /// Loads any previously persisted base URL from [SharedPreferences].
+  static Future<void> loadSavedBaseUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_baseUrlPrefsKey);
+    if (saved != null && validateBaseUrl(saved) == null) {
+      baseUrlNotifier.value = _normalizeBaseUrl(saved);
+    }
+  }
+
+  /// Updates the active base URL in real time and persists it.
+  static Future<void> setBaseUrl(String url) async {
+    final error = validateBaseUrl(url);
+    if (error != null) {
+      throw ArgumentError(error);
+    }
+    final normalized = _normalizeBaseUrl(url);
+    baseUrlNotifier.value = normalized;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_baseUrlPrefsKey, normalized);
+  }
+
+  /// Resets the active base URL to [defaultBaseUrl] and clears persistence.
+  static Future<void> resetBaseUrl() async {
+    baseUrlNotifier.value = defaultBaseUrl;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_baseUrlPrefsKey);
+  }
+
   final Dio _dio;
+  final bool _useGlobalBaseUrl;
   String? _templateJson;
+
+  String get activeBaseUrl =>
+      _useGlobalBaseUrl ? baseUrlNotifier.value : _dio.options.baseUrl;
 
   Future<ReceiptData> extractFromImage(
     Uint8List imageBytes, {
@@ -37,6 +97,10 @@ class ReceiptService {
   }) async {
     if (imageBytes.isEmpty) {
       throw const ReceiptException('Gambar struk kosong.');
+    }
+
+    if (_useGlobalBaseUrl) {
+      _dio.options.baseUrl = baseUrlNotifier.value;
     }
 
     final dataUrl = 'data:$mimeType;base64,${base64Encode(imageBytes)}';

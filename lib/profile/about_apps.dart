@@ -1,4 +1,6 @@
+import 'package:billin/auth/page_transitions.dart';
 import 'package:billin/common/c_app_bar.dart';
+import 'package:billin/developer_setting.dart';
 import 'package:flutter/material.dart';
 
 class AboutPage extends StatelessWidget {
@@ -16,7 +18,7 @@ class AboutPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               _SectionTitle('Tujuan Aplikasi'),
               _NumberedList([
                 'Membantu pengguna menghasilkan pembagian tagihan dengan waktu singkat dan perhitungan yang sesuai.',
@@ -29,7 +31,10 @@ class AboutPage extends StatelessWidget {
                 'Aplikasi ini mengintegrasikan teknologi Vision-Language Model (VLM) pada Fitur Pemindaian Struk untuk meningkatkan efisiensi dan akurasi dalam pengolahan data transaksi non-terstruktur. Melalui kapabilitas pemahaman multimodal, sistem mampu menganalisis struktur visual dokumen struk belanja secara komprehensif, mencakup identifikasi entitas seperti nama item, kuantitas, harga satuan, hingga komponen pajak dan diskon secara otomatis.',
               ),
               SizedBox(height: 24),
-              _SectionTitle('Tim Pengembang'),
+              GestureDetector(
+                onDoubleTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => (DeveloperSetting()))),
+                child: _SectionTitle('Tim Pengembang'),
+              ),
               _Paragraph(
                 'Aplikasi ini dikembangkan oleh Kelompok 5B1 untuk memenuhi penilaian kegiatan Project Based Learning (PBL) Jurusan Teknologi Informasi Tahun Ajaran 2026/2027 di Kampus Politeknik Negeri Bali.',
               ),
