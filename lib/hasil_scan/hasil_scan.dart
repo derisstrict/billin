@@ -2,6 +2,7 @@ import 'package:billin/common/c_app_bar.dart';
 import 'package:billin/common/c_colors.dart';
 import 'package:billin/common/c_container.dart';
 import 'package:billin/common/currency_formatter.dart';
+import 'package:billin/common/date_formatter.dart';
 import 'package:billin/hasil_scan/item_card.dart';
 import 'package:billin/model/receipt.dart';
 import 'package:billin/model/receipt_validation.dart';
@@ -65,6 +66,26 @@ class _HasilScanState extends State<HasilScan> {
     }
     setState(() {
       _receipt = _receipt.copyWith(items: updatedItems);
+    });
+  }
+
+  Future<void> _editMerchantInfo() async {
+    final updated = await showDialog<_EditMerchantResult>(
+      context: context,
+      builder: (_) => _EditMerchantDialog(
+        initialName: _receipt.merchantName,
+        initialDate: _receipt.date,
+      ),
+    );
+    if (updated == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _receipt = _receipt.copyWith(
+        merchantName: updated.merchantName,
+        date: updated.date,
+      );
     });
   }
 
@@ -199,29 +220,39 @@ class _HasilScanState extends State<HasilScan> {
                                 color: CColors.accent,
                               ),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  receipt.merchantName.isEmpty
-                                      ? 'Merchant tidak diketahui'
-                                      : receipt.merchantName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight(700),
-                                    fontSize: 16,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    receipt.merchantName.isEmpty
+                                        ? 'Merchant tidak diketahui'
+                                        : receipt.merchantName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight(700),
+                                      fontSize: 16,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  receipt.date.isEmpty
-                                      ? '-'
-                                      : receipt.dateLabel,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight(400),
-                                    fontSize: 14,
-                                    color: CColors.textGray,
+                                  Text(
+                                    receipt.date.isEmpty
+                                        ? '-'
+                                        : receipt.dateLabel,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight(400),
+                                      fontSize: 14,
+                                      color: CColors.textGray,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _editMerchantInfo,
+                              icon: Icon(
+                                Icons.edit_outlined,
+                                size: 20,
+                                color: CColors.textGray,
+                              ),
                             ),
                           ],
                         ),
@@ -820,6 +851,151 @@ class _EditSummaryDialogState extends State<_EditSummaryDialog> {
               FilteringTextInputFormatter.digitsOnly,
             ],
             decoration: _dialogInputDecoration(),
+          ),
+          if (_errorText != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _errorText!,
+              style: TextStyle(color: CColors.danger, fontSize: 12),
+            ),
+          ],
+        ],
+      ),
+      actions: _dialogActions(
+        onCancel: () => Navigator.pop(context),
+        onConfirm: _submit,
+      ),
+    );
+  }
+}
+
+class _EditMerchantResult {
+  final String merchantName;
+  final String date;
+
+  const _EditMerchantResult({required this.merchantName, required this.date});
+}
+
+class _EditMerchantDialog extends StatefulWidget {
+  final String initialName;
+  final String initialDate;
+
+  const _EditMerchantDialog({
+    required this.initialName,
+    required this.initialDate,
+  });
+
+  @override
+  State<_EditMerchantDialog> createState() => _EditMerchantDialogState();
+}
+
+class _EditMerchantDialogState extends State<_EditMerchantDialog> {
+  late final TextEditingController _nameController;
+  late String _selectedDate = widget.initialDate;
+  late DateTime? _parsedDate = parseReceiptDate(widget.initialDate);
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final firstDate = DateTime(2000);
+    final lastDate = DateTime(now.year + 5);
+    var initialDate = _parsedDate ?? now;
+    if (initialDate.isBefore(firstDate)) {
+      initialDate = firstDate;
+    } else if (initialDate.isAfter(lastDate)) {
+      initialDate = lastDate;
+    }
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
+    if (picked == null || !mounted) {
+      return;
+    }
+
+    final iso =
+        '${picked.year.toString().padLeft(4, '0')}-'
+        '${picked.month.toString().padLeft(2, '0')}-'
+        '${picked.day.toString().padLeft(2, '0')}';
+    setState(() {
+      _parsedDate = picked;
+      _selectedDate = iso;
+    });
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _errorText = 'Nama merchant tidak boleh kosong.');
+      return;
+    }
+    Navigator.pop(
+      context,
+      _EditMerchantResult(merchantName: name, date: _selectedDate),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateDisplay = _selectedDate.trim().isEmpty
+        ? 'Pilih tanggal'
+        : formatReceiptDate(_selectedDate);
+
+    return AlertDialog(
+      title: _dialogTitle(
+        'Edit Merchant',
+        onCancel: () => Navigator.pop(context),
+      ),
+      backgroundColor: Colors.white,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Nama Merchant', style: TextStyle(color: CColors.textGray)),
+          TextField(
+            controller: _nameController,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            onSubmitted: (_) => _submit(),
+            decoration: _dialogInputDecoration(),
+          ),
+          const SizedBox(height: 15),
+          Text('Tanggal', style: TextStyle(color: CColors.textGray)),
+          InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: _pickDate,
+            child: InputDecorator(
+              decoration: _dialogInputDecoration(
+                suffixIcon: Icon(
+                  Icons.calendar_today_outlined,
+                  size: 18,
+                  color: CColors.accent,
+                ),
+              ),
+              child: Text(
+                dateDisplay,
+                style: TextStyle(
+                  color: _selectedDate.trim().isEmpty
+                      ? CColors.textGray
+                      : CColors.text,
+                ),
+              ),
+            ),
           ),
           if (_errorText != null) ...[
             const SizedBox(height: 10),
