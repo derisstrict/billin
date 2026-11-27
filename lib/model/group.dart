@@ -187,6 +187,7 @@ class GroupData {
   }
 
   GroupData copyWith({
+    ReceiptData? receipt,
     List<GroupMember>? members,
     Map<int, Set<String>>? assignments,
     int? revision,
@@ -195,10 +196,32 @@ class GroupData {
       token: token,
       joinUrl: joinUrl,
       revision: revision ?? this.revision,
-      receipt: receipt,
+      receipt: receipt ?? this.receipt,
       members: members ?? this.members,
       assignments: assignments ?? this.assignments,
     );
+  }
+
+  /// Replaces [receipt] and remaps item assignments by [ReceiptItem.id] so
+  /// surviving items keep their assignees even when other items are deleted.
+  GroupData withReceipt(ReceiptData nextReceipt) {
+    final assigneesByItemId = <int, Set<String>>{};
+    for (var i = 0; i < receipt.items.length; i++) {
+      final assignees = assignments[i];
+      if (assignees != null && assignees.isNotEmpty) {
+        assigneesByItemId[receipt.items[i].id] = Set<String>.from(assignees);
+      }
+    }
+
+    final remapped = <int, Set<String>>{};
+    for (var i = 0; i < nextReceipt.items.length; i++) {
+      final assignees = assigneesByItemId[nextReceipt.items[i].id];
+      if (assignees != null && assignees.isNotEmpty) {
+        remapped[i] = Set<String>.from(assignees);
+      }
+    }
+
+    return copyWith(receipt: nextReceipt, assignments: remapped);
   }
 
   GroupData withAssignments(String memberId, Set<int> indexes) {

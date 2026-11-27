@@ -120,6 +120,23 @@ class GroupService {
     });
   }
 
+  Future<GroupData> updateReceipt({
+    required String token,
+    required String memberId,
+    required ReceiptData receipt,
+  }) async {
+    return _guard(() async {
+      final response = await _dio.put<dynamic>(
+        '/api/groups/${Uri.encodeComponent(token)}/receipt',
+        data: {
+          'member_id': memberId,
+          'receipt': receipt.toJson(),
+        },
+      );
+      return _group(response.data);
+    });
+  }
+
   Future<T> _guard<T>(Future<T> Function() action) async {
     if (_useGlobalBaseUrl) {
       _dio.options.baseUrl = baseUrlNotifier.value;

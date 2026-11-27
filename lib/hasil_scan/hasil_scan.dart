@@ -12,8 +12,13 @@ import 'package:flutter/services.dart';
 
 class HasilScan extends StatefulWidget {
   final ReceiptData receipt;
+  final bool isEditMode;
 
-  const HasilScan({super.key, required this.receipt});
+  const HasilScan({
+    super.key,
+    required this.receipt,
+    this.isEditMode = false,
+  });
 
   @override
   State<HasilScan> createState() => _HasilScanState();
@@ -193,7 +198,7 @@ class _HasilScanState extends State<HasilScan> {
 
     return Scaffold(
       backgroundColor: CColors.background,
-      appBar: CAppBar("Hasil Scan"),
+      appBar: CAppBar(widget.isEditMode ? "Edit Struk" : "Hasil Scan"),
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(20),
@@ -376,39 +381,38 @@ class _HasilScanState extends State<HasilScan> {
                                     _receipt.copyWith(subtotal: value),
                               ),
                             ),
-                            if (receipt.tax > 0)
-                              _summaryRow(
-                                "Pajak",
-                                formatRupiah(receipt.tax),
-                                onEdit: () => _editSummaryField(
-                                  label: 'Pajak',
-                                  initialValue: receipt.tax,
-                                  onSave: (value) =>
-                                      _receipt.copyWith(tax: value),
-                                ),
+                            _summaryRow(
+                              "Pajak",
+                              formatRupiah(receipt.tax),
+                              onEdit: () => _editSummaryField(
+                                label: 'Pajak',
+                                initialValue: receipt.tax,
+                                onSave: (value) =>
+                                    _receipt.copyWith(tax: value),
                               ),
-                            if (receipt.serviceCharge > 0)
-                              _summaryRow(
-                                "Biaya Layanan",
-                                formatRupiah(receipt.serviceCharge),
-                                onEdit: () => _editSummaryField(
-                                  label: 'Biaya Layanan',
-                                  initialValue: receipt.serviceCharge,
-                                  onSave: (value) =>
-                                      _receipt.copyWith(serviceCharge: value),
-                                ),
+                            ),
+                            _summaryRow(
+                              "Biaya Layanan",
+                              formatRupiah(receipt.serviceCharge),
+                              onEdit: () => _editSummaryField(
+                                label: 'Biaya Layanan',
+                                initialValue: receipt.serviceCharge,
+                                onSave: (value) =>
+                                    _receipt.copyWith(serviceCharge: value),
                               ),
-                            if (receipt.discounts > 0)
-                              _summaryRow(
-                                "Diskon",
-                                "- ${formatRupiah(receipt.discounts)}",
-                                onEdit: () => _editSummaryField(
-                                  label: 'Diskon',
-                                  initialValue: receipt.discounts,
-                                  onSave: (value) =>
-                                      _receipt.copyWith(discounts: value),
-                                ),
+                            ),
+                            _summaryRow(
+                              "Diskon",
+                              receipt.discounts > 0
+                                  ? "- ${formatRupiah(receipt.discounts)}"
+                                  : formatRupiah(0),
+                              onEdit: () => _editSummaryField(
+                                label: 'Diskon',
+                                initialValue: receipt.discounts,
+                                onSave: (value) =>
+                                    _receipt.copyWith(discounts: value),
                               ),
+                            ),
                             _summaryRow(
                               "Grand Total",
                               formatRupiah(receipt.grandTotal),
@@ -490,6 +494,10 @@ class _HasilScanState extends State<HasilScan> {
                 borderRadius: BorderRadius.circular(10),
                 child: InkWell(
                   onTap: () {
+                    if (widget.isEditMode) {
+                      Navigator.of(context).pop(receipt);
+                      return;
+                    }
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => SplitPage(receipt: receipt),
@@ -497,14 +505,14 @@ class _HasilScanState extends State<HasilScan> {
                     );
                   },
                   borderRadius: BorderRadius.circular(10),
-                  child: const Padding(
-                    padding: EdgeInsets.all(10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Lanjutkan",
-                          style: TextStyle(
+                          widget.isEditMode ? "Simpan" : "Lanjutkan",
+                          style: const TextStyle(
                             fontWeight: FontWeight(700),
                             color: Colors.white,
                           ),

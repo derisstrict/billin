@@ -4,6 +4,7 @@ import 'package:billin/common/c_app_bar.dart';
 import 'package:billin/common/c_colors.dart';
 import 'package:billin/common/currency_formatter.dart';
 import 'package:billin/common/section_heading.dart';
+import 'package:billin/hasil_scan/hasil_scan.dart';
 import 'package:billin/list_anggota/list_anggota.dart';
 import 'package:billin/model/group.dart';
 import 'package:billin/model/receipt.dart';
@@ -220,6 +221,74 @@ class _SplitPageState extends State<SplitPage> {
             ListAnggota(groupToken: _token!, currentMemberId: _memberId),
       ),
     );
+  }
+
+  Future<void> _editReceipt() async {
+    final group = _group;
+    final memberId = _memberId;
+    if (group == null || _saving) {
+      return;
+    }
+    if (!(group.memberById(memberId)?.isHost ?? false)) {
+      _showMessage('Hanya host yang dapat mengubah struk.');
+      return;
+    }
+
+    final updatedReceipt = await Navigator.of(context).push<ReceiptData>(
+      MaterialPageRoute<ReceiptData>(
+        builder: (_) => HasilScan(
+          receipt: group.receipt,
+          isEditMode: true,
+        ),
+      ),
+    );
+
+    if (updatedReceipt == null || !mounted) {
+      return;
+    }
+
+    final previousGroup = group;
+    final previousFallback = _fallbackReceipt;
+    final nextGroup = group.withReceipt(updatedReceipt);
+
+    setState(() {
+      _fallbackReceipt = updatedReceipt;
+      _group = nextGroup;
+      _saving = true;
+    });
+
+    if (_isLocalMode || _token == null || memberId == null) {
+      setState(() => _saving = false);
+      return;
+    }
+
+    try {
+      final synced = await _service.updateReceipt(
+        token: _token!,
+        memberId: memberId,
+        receipt: updatedReceipt,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _group = synced;
+        _fallbackReceipt = synced.receipt;
+        _lastRevision = synced.revision;
+        _saving = false;
+        _connectionError = null;
+      });
+    } on GroupException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _fallbackReceipt = previousFallback;
+        _group = previousGroup;
+        _saving = false;
+      });
+      _showMessage(error.message);
+    }
   }
 
   void _showMessage(String message) {
@@ -451,17 +520,16 @@ class _SplitPageState extends State<SplitPage> {
                             ],
                           ),
                         ),
-                        IconButton(
-                          onPressed: () => _showMessage(
-                            'Edit struk tersedia dari halaman hasil scan.',
+                        if (group.memberById(memberId)?.isHost ?? false)
+                          IconButton(
+                            onPressed: _saving ? null : _editReceipt,
+                            icon: Icon(
+                              Symbols.edit_square,
+                              weight: 600,
+                              color: CColors.accent,
+                              size: 20,
+                            ),
                           ),
-                          icon: Icon(
-                            Symbols.edit_square,
-                            weight: 600,
-                            color: CColors.accent,
-                            size: 20,
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
